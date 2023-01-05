@@ -1,76 +1,68 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import uuid from 'react-uuid';
+import { useRecoilState } from 'recoil';
 import styled from 'styled-components';
+import { refetchState, todoState } from '../atoms/store';
 import Issue from '../components/Issue';
 import AddIssueModal from '../components/Modal/AddIssue';
 
-const TODO_LIST = [
-  {
-    id: 1,
-    title: '할 일 제목',
-    description: '할 일 입니다.',
-    deadline: '',
-    status: 'todo',
-    manage: '조정택',
-  },
-  {
-    id: 2,
-    title: '진행중 제목',
-    description: '할 일 입니다.',
-    deadline: '',
-    status: 'inprogress',
-    manage: '조정택',
-  },
-  {
-    id: 3,
-    title: '완료 제목',
-    description: '할 일 입니다.',
-    deadline: '',
-    status: 'complete',
-    manage: '조정택',
-  },
-  {
-    id: 4,
-    title: '할 일 제목2',
-    description: '할 일 입니다.',
-    deadline: '',
-    status: 'todo',
-    manage: '조정택',
-  },
-];
-
 const Board = () => {
-  const [isModal, setIsModal] = useState(false);
   const [todoInput, setTodoInput] = useState({
     id: uuid(),
-    title: 'asd',
-    description: 'asd',
-    deadline: '2022.01.01',
-    status: 'todo',
-    manage: '조정택',
+    title: '',
+    description: '',
+    deadline: '',
+    status: '',
+    manager: '',
   });
+  const [isModal, setIsModal] = useState(false);
+  const [todoList, setTodoList] = useRecoilState(todoState);
+  const [refetch, setRefetch] = useRecoilState(refetchState);
+  const [isupdate, setIsUpdate] = useState(false);
+  const [issueId, setIssueId] = useState('');
 
-  const TODO = TODO_LIST.filter((el) => el.status === 'todo');
-  const INPROGRESS = TODO_LIST.filter((el) => el.status === 'inprogress');
-  const COMPLETE = TODO_LIST.filter((el) => el.status === 'complete');
+  const getTodoList = useCallback(() => {
+    const TodoList = JSON.parse(localStorage.getItem('todo-list') ?? []);
 
-  //   useEffect(() => {
-  //     const TodoList = localStorage.getItem('todo-list') ?? [];
-  //   }, []);
+    setTodoList(TodoList);
+  }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem('todo-list')) {
+      getTodoList();
+    }
+  }, [refetch]);
+
+  const TODO = todoList.filter((el) => el.status === 'todo');
+  const INPROGRESS = todoList.filter((el) => el.status === 'inprogress');
+  const COMPLETE = todoList.filter((el) => el.status === 'complete');
 
   const handleModalToggle = () => {
     setIsModal((prev) => !prev);
+    setIsUpdate(false);
+  };
+
+  const handleIssueView = (issueId) => () => {
+    setIsUpdate(true);
+    setIsModal(true);
+    setIssueId(issueId);
   };
 
   const handleSubmit = () => {
     try {
-      const TodoList = JSON.parse(localStorage.getItem('todo-list')) ?? [];
-      console.log(TodoList);
-      TodoList.push(todoInput);
+      if (todoInput.title && todoInput.description && todoInput.deadline && todoInput.status && todoInput.manager) {
+        const TodoList = JSON.parse(localStorage.getItem('todo-list')) ?? [];
+        TodoList.push(todoInput);
 
-      localStorage.setItem('todo-list', JSON.stringify(TodoList));
+        localStorage.setItem('todo-list', JSON.stringify(TodoList));
+        setTodoInput('');
+        setRefetch((prev) => prev + 1);
+        setIsModal(false);
 
-      alert('등록완료');
+        alert('등록완료');
+      } else {
+        alert('빈칸을 채워주세요.');
+      }
     } catch (error) {
       alert('실패');
     }
@@ -79,6 +71,7 @@ const Board = () => {
   return (
     <Wrapper>
       <Container>
+        <Title>Issue Tracking</Title>
         <IssueBox>
           <TodoBox>
             <BoxTitle>
@@ -90,8 +83,12 @@ const Board = () => {
                   <AddIssuwBox onClick={handleModalToggle}>추가 +</AddIssuwBox>
                 </Issue>
               )}
-              {TODO.map((todo) => {
-                return <Issue>{todo.title}</Issue>;
+              {TODO.map((el) => {
+                return (
+                  <Issue handleIssueView={handleIssueView} el={el} key={el.id} draggable>
+                    {el.title}
+                  </Issue>
+                );
               })}
             </ContentBox>
           </TodoBox>
@@ -100,8 +97,12 @@ const Board = () => {
               <span>진행중</span>
             </BoxTitle>
             <ContentBox>
-              {INPROGRESS.map((inprogress) => {
-                return <Issue>{inprogress.title}</Issue>;
+              {INPROGRESS.map((el) => {
+                return (
+                  <Issue handleIssueView={handleIssueView} el={el} key={el.id} draggable>
+                    {el.title}
+                  </Issue>
+                );
               })}
             </ContentBox>
           </InProgressBox>
@@ -110,14 +111,28 @@ const Board = () => {
               <span>완료</span>
             </BoxTitle>
             <ContentBox>
-              {COMPLETE.map((complete) => {
-                return <Issue>{complete.title}</Issue>;
+              {COMPLETE.map((el) => {
+                return (
+                  <Issue handleIssueView={handleIssueView} el={el} key={el.id} draggable>
+                    {el.title}
+                  </Issue>
+                );
               })}
             </ContentBox>
           </CompleteBox>
         </IssueBox>
       </Container>
-      {isModal && <AddIssueModal handleModalToggle={handleModalToggle} handleSubmit={handleSubmit} />}
+      {isModal && (
+        <AddIssueModal
+          handleModalToggle={handleModalToggle}
+          handleSubmit={handleSubmit}
+          todoInput={todoInput}
+          setTodoInput={setTodoInput}
+          isupdate={isupdate}
+          issueId={issueId}
+          setIsModal={setIsModal}
+        />
+      )}
     </Wrapper>
   );
 };
@@ -132,6 +147,13 @@ const Wrapper = styled.div`
 
 const Container = styled.div`
   width: 960px;
+`;
+
+const Title = styled.h1`
+  font-size: 32px;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 100px;
 `;
 
 const IssueBox = styled.div`

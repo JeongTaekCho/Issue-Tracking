@@ -1,8 +1,12 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const Issue = ({ children }) => {
-  return <IssueBox>{children}</IssueBox>;
+const Issue = ({ children, handleIssueView, el, draggable }) => {
+  return (
+    <IssueBox onClick={el && handleIssueView(el.id)} draggable={draggable}>
+      {children}
+    </IssueBox>
+  );
 };
 
 const IssueBox = styled.div`

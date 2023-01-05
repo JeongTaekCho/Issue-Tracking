@@ -1,8 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const AddIssueInput = ({ type, readonly }) => {
-  return <Input type={type} readOnly={readonly} />;
+const AddIssueInput = ({ type, name, onChange, value, defaultValue }) => {
+  return <Input type={type} name={name} onChange={onChange} value={value} defaultValue={defaultValue} />;
 };
 
 const Input = styled.input`

@@ -20,6 +20,7 @@ const Board = () => {
   const [refetch, setRefetch] = useRecoilState(refetchState);
   const [isupdate, setIsUpdate] = useState(false);
   const [issueId, setIssueId] = useState('');
+  const [isDraging, setIsDraging] = useState(false);
 
   const getTodoList = useCallback(() => {
     const TodoList = JSON.parse(localStorage.getItem('todo-list') ?? []);
@@ -46,6 +47,11 @@ const Board = () => {
     setIsUpdate(true);
     setIsModal(true);
     setIssueId(issueId);
+  };
+
+  const handleOnDragbled = (event) => {
+    console.log(event);
+    setIsDraging(true);
   };
 
   const handleSubmit = () => {
@@ -85,7 +91,13 @@ const Board = () => {
               )}
               {TODO.map((el) => {
                 return (
-                  <Issue handleIssueView={handleIssueView} el={el} key={el.id} draggable>
+                  <Issue
+                    handleOnDragbled={handleOnDragbled}
+                    handleIssueView={handleIssueView}
+                    style={{ border: isDraging && '1px solid red' }}
+                    el={el}
+                    key={el.id}
+                    draggable>
                     {el.title}
                   </Issue>
                 );

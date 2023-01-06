@@ -1,9 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
 
-const Issue = ({ children, handleIssueView, el, draggable }) => {
+const Issue = ({ children, handleIssueView, el, draggable, handleOnDragbled, style }) => {
   return (
-    <IssueBox onClick={el && handleIssueView(el.id)} draggable={draggable}>
+    <IssueBox style={style} onDragStart={handleOnDragbled} onClick={el && handleIssueView(el.id)} draggable={draggable}>
       {children}
     </IssueBox>
   );
